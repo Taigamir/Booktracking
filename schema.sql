@@ -1,0 +1,34 @@
+CREATE TABLE Users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL
+);
+
+CREATE TABLE Books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Title TEXT NOT NULL,
+    Author TEXT NOT NULL,
+    Year INTEGER,
+    Genre TEXT
+);
+
+CREATE TABLE Reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    User_id INTEGER NOT NULL,
+    Book_id INTEGER NOT NULL,
+    Rating INTEGER NOT NULL CHECK(Rating => 1 AND Rating <= 5),
+    Content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (User_id) REFERENCES Users(id),
+    FOREIGN KEY (Books_id) REFERENCES Books(id)
+);
+
+CREATE TABLE Comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    User_id INTEGER NOT NULL,
+    Review_id INTEGER NOT NULL,
+    Content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (User_id) REFERENCES Users(id),
+    FOREIGN KEY (Review_id) REFERENCES Reviews(id)
+);
