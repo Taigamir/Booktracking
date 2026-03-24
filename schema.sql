@@ -8,8 +8,21 @@ CREATE TABLE Books (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     Title TEXT NOT NULL,
     Author TEXT NOT NULL,
-    Year INTEGER,
-    Genre TEXT
+    Year INTEGER
+);
+
+CREATE TABLE Genres (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE Book_Genres (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Book_id INTEGER NOT NULL,
+    Genre_id INTEGER NOT NULL,
+    PRIMARY KEY (Book_id, Genre_id),
+    FOREIGN KEY (Book_id) REFERENCES Books(id),
+    FOREIGN KEY (Genre_id) REFERENCES Genres(id)
 );
 
 CREATE TABLE Reviews (
