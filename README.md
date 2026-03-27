@@ -1,5 +1,8 @@
 # Booktracking
 Small test webapp to let users track and review books they have read.\
+**Implemented features**\
+-Account creation, login, logout\
+
 **Features will include:**\
 -creating and logging into accounts\
 -searching for books in database \
@@ -7,3 +10,4 @@ Small test webapp to let users track and review books they have read.\
 -sort seacth funtion by tags\
 -making, editing and deleting reviews\
 -making, editing and deleting comments on reviews\
+-friends list?, messaging and sharing?
