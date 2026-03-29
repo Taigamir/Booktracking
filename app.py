@@ -156,3 +156,121 @@ def book(book_id):
                            avg_rating=avg_rating,
                             comments=comments,
                             user_review=user_review)
+
+@app.route("/add_review/<int:book_id>", methods=["POST"])
+def add_review(book_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+    
+    rating = request.form["rating"]
+    content = request.form["content"]
+    db = get_db()
+    db.execute(
+        "INSERT INTO reviews (user_id, book_id, rating, content) VALUES (?, ?, ?, ?)",
+        [session["user_id"], book_id, rating, content]
+    )
+    db.commit()
+    return redirect(f"/book/{book_id}")
+
+@app.route("/edit_review/<int:review_id>", methods=["GET", "POST"])
+def edit_review(review_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    db = get_db()
+    review = db.execute(
+        "SELECT * FROM reviews WHERE id = ?", [review_id]
+    ).fetchone()
+
+    if not review or review["user_id"] != session["user_id"]:
+        return redirect("/books")
+    
+    if request.method == "POST":
+        rating = request.form["rating"]
+        content = request.form["content"]
+        db.execute(
+            "UPDATE reviews SET rating = ?, content = ? where id = ?",
+            [rating, content, review_id]
+        )
+        db.commit()
+        return redirect(f"/book/review['book_id']")
+    return render_template("edit_review.html", review=review)
+
+@app.route("/delete_review/<int:review_id>")
+def delete_review(review_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+    
+    db = get_db()
+    review = db.execute(
+        "SELECT * FROM reviews WHERE id = ?", [review_id]
+    ).fetchone()
+
+    if not review or review["user_id"] != session["user_id"]:
+        return redirect("/books")
+    
+    db.execute("DELETE FROM reviews WHERE id = ?", [review_id])
+    db.commit()
+    return redirect(f"/book/{review['book_id']}")
+
+@app.route("/add_comment/<int:review_id>", methods=["POST"])
+def add_comment(review_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    content = request.form["content"]
+    db = get_db()
+    review = db.execute(
+        "SELECT * FROM reviews WHERE id = ?", [review_id]
+    ).fetchone()
+    db.execute(
+        "INSERT INTO comments (user_id, review_id, content) VALUES (?, ?, ?)",
+        [session["user_id"], review_id, content]
+    )
+    db.commit()
+    return redirect(f"/book/{review['book_id']}")
+
+@app.route("/edit_comment/<int:comment_id>", methods=["GET", "POST"])
+def edit_comment(comment_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    db = get_db()
+    comment = db.execute(
+        """SELECT comments.*, reviews.book_id
+            FROM comments
+            JOIN reviews ON comments.review_id = reviews.id
+            WHERE comments.id = ?""",
+            [comment_id]
+    ).fetchone()
+
+    if not comment or comment["user_id"] != session["user_id"]:
+        return redirect("/books")
+    
+    if request.method == "POST":
+        content = request.form["content"]
+        db.execute(
+            "UPDATE comments SET content = ? where id = ?",
+            [content, comment_id]
+        )
+        db.commit()
+        return redirect(f"/book/{comment['book_id']}")
+    return render_template("edit_comment.html", comment=comment)
+
+@app.route("/delete_comment/<int:review_id>")
+def delete_comment(comment_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+    
+    db = get_db()
+    comment = db.execute(
+        "SELECT comments.*, reviews.book_id FROM comments JOIN reviews ON comments.review_id = reviews.id WHERE comments.id = ?",
+        [comment_id]
+    ).fetchone()
+
+    if not comment or comment["user_id"] != session["user_id"]:
+        return redirect("/books")
+    
+    db.execute("DELETE FROM comments WHERE id = ?", [comment_id])
+    db.commit()
+    return redirect(f"/book/{comment['book_id']}")
