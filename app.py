@@ -11,24 +11,39 @@ app.teardown_appcontext(close_db)
 
 @app.route("/")
 def index():
-    return render_template(index.html)
+    db = get_db()
+    recent_books = db.execute(
+        "SELECT * FROM books ORDER BY id DESC LIMIT 5"
+    ).fetchall()
+    recent_reviews = db.execute(
+        """SELECT reviews.*, books.title, users.username
+            FROM reviews
+            JOIN books ON reviews.book_id = books.id
+            JOIN users ON reviews.user_id = users.id
+            ORDER BY reviews.created_at DESC LIMIT 5"""
+    ).fetchall()
+    return render_template("index.html",
+                           recent_books=recent_books,
+                           recent_reviews=recent_reviews)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form["Username"]
-        password1 = request.form["Password1"]
-        password2 = request.form["Password2"]
-        if password1 != password2:
-            return "ERROR: The passwords dont match"
-        password_hash = generate_password_hash(password1)
+        password = request.form["Password"]
+        confirm_password = request.form["Confimr_Password"]
+        if password != confirm_password:
+            return render_template("register.html", error="Passwords do not match")
+        
+        password_hash = generate_password_hash(password)
         db = get_db()
         try:
-            db.execute("INSERT INTO users (usernam, password_hash) VALUES (?, ?)",
+            db.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
                     [username, password_hash])
             db.commit()
         except sqlite3.IntegrityError:
-            return "ERROR: account already exists"
+            return render_template("register.html", error="Username already taken")
+        
         return redirect("/login")
     return render_template("register.html")
 

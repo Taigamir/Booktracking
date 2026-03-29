@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1>Welcome to BookReviews</h1>
+    <p>Find and review books, feel free to add any that are missing.</p>
+
+    <h2>Recently Added Books</h2>
+    {% for books in recent_books %}
+        <div>
+            <a href="/book/{{ book.id}}"></a>
+            <span>{{ book.author }}</span>
+        </div>
+    {% else %}
+        <p>No books added yet. <a href="/books">Be the first!</a></p>
+    {% endfor %}
+
+    <h2>Recent Reviews</h2>
+    {% for review in recent_reviews %}
+        <div>
+            <a href="/book/{{ review.book_id}}">{{ review.title}}</a>
+            <span>{{ review.username }} - {{review.rating}}/5</span>
+            <p>{{ review.content }}</p>
+        </div>
+    {% else %}
+        <p>No reviews yet.</p>
+    {% endfor %}
+{% endblock %}

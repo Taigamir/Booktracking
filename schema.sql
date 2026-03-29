@@ -1,51 +1,51 @@
-CREATE TABLE Users (
+CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL
 );
 
-CREATE TABLE Books (
+CREATE TABLE books (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Title TEXT NOT NULL,
-    Author TEXT NOT NULL,
-    Year INTEGER
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    year INTEGER
     created INTEGER,
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-CREATE TABLE Genres (
+CREATE TABLE genres (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL
 );
 
-CREATE TABLE Book_Genres (
+CREATE TABLE book_Genres (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Book_id INTEGER NOT NULL,
-    Genre_id INTEGER NOT NULL,
-    PRIMARY KEY (Book_id, Genre_id),
-    FOREIGN KEY (Book_id) REFERENCES Books(id),
-    FOREIGN KEY (Genre_id) REFERENCES Genres(id)
+    book_id INTEGER NOT NULL,
+    genre_id INTEGER NOT NULL,
+    PRIMARY KEY (book_id, genre_id),
+    FOREIGN KEY (book_id) REFERENCES books(id),
+    FOREIGN KEY (genre_id) REFERENCES genres(id)
 );
 
-CREATE TABLE Reviews (
+CREATE TABLE reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    User_id INTEGER NOT NULL,
-    Book_id INTEGER NOT NULL,
-    Rating INTEGER NOT NULL CHECK(Rating => 1 AND Rating <= 5),
-    Content TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL CHECK(rating => 1 AND rating <= 5),
+    content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (User_id) REFERENCES Users(id),
-    FOREIGN KEY (Books_id) REFERENCES Books(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (books_id) REFERENCES books(id)
 );
 
-CREATE TABLE Comments (
+CREATE TABLE comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    User_id INTEGER NOT NULL,
-    Review_id INTEGER NOT NULL,
-    Content TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    review_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (User_id) REFERENCES Users(id),
-    FOREIGN KEY (Review_id) REFERENCES Reviews(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (review_id) REFERENCES reviews(id)
 );
 
 INSERT INTO genres (name) VALUES
