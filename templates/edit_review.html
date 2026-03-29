@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Review{% endblock %}
+
+{% block content %}
+    <h1>Edit Review</h1>
+    <form method="POST">
+        <label>Rating</label>
+        <select name="rating">
+            {% for i in [5, 4, 3, 2, 1] %}
+                <option value="{{ i }}" {% if review.rating == i %}selected{% endif %}>
+                    {{ i }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Review</label>
+        <textarea name="content" required>{{ review.content }}</textarea>
+
+        <button type="submit">Save Changes</button>
+        <a href="/book/{{ review.book_id }}">Cancel</a>
+    </form>
+{% endblock %}

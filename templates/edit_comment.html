@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Comment{% endblock %}
+
+{% block content %}
+    <h1>Edit Comment</h1>
+    <form method="POST">
+        <label>Comment</label>
+        <textarea name="content" required>{{ comment.content }}</textarea>
+
+        <button type="submit">Save Changes</button>
+        <a href="/book/{{ comment.book_id }}">Cancel</a>
+    </form>
+{% endblock %}

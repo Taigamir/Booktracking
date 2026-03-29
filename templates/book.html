@@ -7,7 +7,7 @@
     <p>{{ book.author }}{% if book.year %} ({{ book.year}}){% endif %}</p>
 
     {% if session["user_id"] == book["created_by"] %}
-        <a href="/edite_book/{{ bookid }}">Edit book</a>
+        <a href="/edit_book/{{ bookid }}">Edit book</a>
     {% endif %}
 
     {% if avg_rating %}

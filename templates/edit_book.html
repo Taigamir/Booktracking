@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Book{% endblock %}
+
+{% block content %}
+    <h1>Edit Book</h1>
+    <form method="POST">
+        <label>Title</label>
+        <input type="text" name="title" value="{{ book.title }}" required>
+
+        <label>Author</label>
+        <input type="text" name="author" value="{{ book.author }}" required>
+
+        <label>Year (optional)</label>
+        <input type="number" name="year" value="{{ book.year or '' }}" min="0" max="2026">
+
+        <button type="submit">Save Changes</button>
+        <a href="/book/{{ book.id }}">Cancel</a>
+    </form>
+{% endblock %}
