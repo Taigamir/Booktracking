@@ -9,6 +9,8 @@ CREATE TABLE Books (
     Title TEXT NOT NULL,
     Author TEXT NOT NULL,
     Year INTEGER
+    created INTEGER,
+    FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
 CREATE TABLE Genres (
@@ -45,3 +47,15 @@ CREATE TABLE Comments (
     FOREIGN KEY (User_id) REFERENCES Users(id),
     FOREIGN KEY (Review_id) REFERENCES Reviews(id)
 );
+
+INSERT INTO genres (name) VALUES
+    ('Fiction')
+    ('Non-fiction')
+    ('Sci-fi')
+    ('Fantasy')
+    ('Thriller')
+    ('Romance')
+    ('Mystery')
+    ('Horror')
+    ('Historical')
+    ('Biography');
