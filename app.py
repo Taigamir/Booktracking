@@ -66,3 +66,93 @@ def login():
 def logout():
     session.clear()
     return redirect("/")
+
+@app.route("/books")
+def books():
+    db = get_db()
+    query = request.args.get("query", "")
+
+    if query:
+        results = db.execute(
+            """SELECT * FROM books
+                WHERE LOWER(title) LIKE LOWER(?)
+                OR LOWER(author) LIKE LOWER(?)""",
+            [f"%{query}", f"%{query}"]
+        ).fetchall()
+    else:
+        results = db.execute("SELECT * FROM books").fetchall()
+
+    return render_template("books.html", books=results, query=query)
+
+@app.route("/add_book", methods=["GET", "POST"])
+def add_book():
+    if not session.get("user.id"):
+        return redirect("/login")
+    
+    if request.method == "POST":
+        title = request.form["title"]
+        author = request.form["author"]
+        year = request.form["year"] or None
+        db = get_db()
+        db.execute(
+            "INSERT INTO books (title, author, year, created_by) VALUES (?, ?, ?, ?)",
+            [title, author, year, session["user_id"]]
+        )
+        db = get_db()
+        book = db.execute(
+            "SELECT *FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
+            [title, session["user_id"]]
+        ).fetchone()
+        return redirect(f"/books/{book['id']}")
+    
+    query = request.args.get("query", "")
+    return render_template("add_book.html", query=query)
+
+@app.route("/book/<int:book_id>")
+def book(book_id):
+    db = get_db()
+    book = db.execute(
+        "SELECT * FROM books WHERE id = ?", [book_id]
+    ).fetchone()
+
+    if not book:
+        return redirect("/books")
+    
+    reviews = db.execute(
+        """SELECT reviews.*, users.username
+            FROM reviews
+            JOIN users ON reviews.user_id = user.id
+            WHERE reviews.book_id = ?
+            ORDER BY reviews.created_at DESC""",
+        [book_id]
+    ).fetchall()
+
+    avg_rating = db.execute(
+        "SELECT ROUND(AVG(rating), 1) as avg FROM reviews WHERE book_id = ?",
+        [book_id]
+    ).fetchone()["avg"]
+
+    comments = db.execute(
+        """SELECT comments.*m users.username
+            FROM comments
+            JOIN users ON comments.user_id = users.id
+            WHERE comments.review_ID IN(
+                SELECT id FROM reviews WHERE book_id = ?
+            )
+            ORDER BY comments.created at ASC""",
+            [book_id]
+    ).fetchall()
+
+    user_review = None
+    if session.get("user_id"):
+        user_review = db.execute(
+            "SELECT * FROM reviews WHERE user_id = ? AND book_id = ?",
+            [session["user_id"], book_id]
+        ).fetchone()
+    
+    return render_template("book.html",
+                           book=book,
+                           rewiews=reviews,
+                           avg_rating=avg_rating,
+                            comments=comments,
+                            user_review=user_review)

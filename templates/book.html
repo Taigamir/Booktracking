@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ book.title}}</h1>
+    <p>{{ book.author }}{% if book.year %} ({{ book.year}}){% endif %}</p>
+
+    {% if session["user_id"] == book["created_by"] %}
+        <a href="/edite_book/{{ bookid }}">Edit book</a>
+    {% endif %}
+
+    {% if avg_rating %}
+        <p>Average rating: {{ avg_rating }}/5 ({{ reviews|length }} reviews)</p>
+    {% else %}
+        <p>No rewies yet</p>
+    {% endif %}
+
+    {% if session.get("user_id") and not user_review %}
+        <h2>Leave a Review</h2>
+        <form method="POST" action="/add_review/ {{ book.id }}">
+            <label>Rating</label>
+            <select name="rating">
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Good</option>
+                <option value="3">3 - OK</option>
+                <option value="2">2 - Poor</option>
+                <option value="1">1 - Terrible</option>
+            </select>
+            <label>Review</label>
+            <textarea name="content" required></textarea>
+            <button type="submit">Submit Review</button>
+        </form>
+    {% elif user_review %}
+        <p> You reviewed this book. <a href="/edit_review/{{ user_review.id }}">Edit your review</a></p>
+    {% else %}
+        <p><a href="/login">Login to leave a review</a></p>
+    {% endif %}
+
+    <h2>Reviews</h2>
+    {% for review in reviews %}
+        <div>
+            <p>{{ review.username }} — {{ review.rating }}/5</p>
+            <p>{{ review.content }}</p>
+            <small>{{ review.created_at }}</small>
+
+            {% if session.get("user_id") == review["user_id"] %}
+                <a href="/edit_review/{{ review.id }}">Edit</a>
+                <a href="/delete_review/{{ review.id }}">Delete</a>
+            {% endif %}
+
+            <h4>Comments</h4>
+            {% for comment in comments %}
+                {% if comment.review_id == review.id %}
+                    <div>
+                        <strong>{{ comment.username }}</strong>
+                        <p>{{ comment.content }}</p>
+                        {% if session.get("user_id") == comment["user_id"] %}
+                            <a href="/delete_comment/{{ comment.id }}">Delete</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {% if session.get("user_id") %}
+                <form method="POST" action="/add_comment/{{ review.id }}">
+                    <input type="text" name="content" placeholder="Add a comment...">
+                    <button type="submit">Comment</button>
+                </form>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>No reviews yet. Be the first!</p>
+    {% endfor %}
+{% endblock %}

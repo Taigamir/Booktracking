@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Books{% endblock %}
+
+{% block content %}
+    <h1>Books</h1>
+
+    <form method="GET">
+        <input type="text" name="query" value="{{ query}}" placeholder="Search by title or author">
+        <button type="submit">Search</button>
+    </form>
+
+    {% if query %}
+        <p>{{ books|length }} result(s) found</p>
+    {% endif %}
+
+    {% for book in books%}
+        <div>
+            <a href="/book/{{ book.id }}">{{ book.title }}</a>
+            <span>{{ book.author }}</span>
+            {% if book.year}<span>{{ book.year }}</span>{% endif %}
+        </div>
+    {% else %}
+        <p>No books found.
+            {% if session["user_id"] %}
+                <a href="add_book?query={{ query }}">Add "{{query}}"?</a>
+            {% else %}
+                <a href=""/login">Login to add it</a>
+            {% endif %}
+        </p>
+    {% endfor %}
+{% endblock %}
