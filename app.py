@@ -4,10 +4,17 @@ from flask import render_template, request, redirect, g, session
 from database import get_db, close_db, init_db
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import config
+
 app = Flask(__name__)
-app.secret_key = "??????" #remember to swap
+app.secret_key = config.secret_key
 
 app.teardown_appcontext(close_db)
+
+@app.cli.command("init-db")
+def init_db_command():
+    init_db(app)
+    print("Database init")
 
 @app.route("/")
 def index():
@@ -107,6 +114,33 @@ def add_book():
     
     query = request.args.get("query", "")
     return render_template("add_book.html", query=query)
+
+@app.route("/edit_book/<int:book_id>", methods=["GET", "POST"])
+def edit_book(book_id):
+    if not session.get("user_id"):
+        return redirect("/login")
+    
+    db = get_db()
+    book = db.execute(
+        "SELECT * FROM books WHERE id = ?", [book_id]
+    ).fetchone()
+
+    if not book or book["created_by"] != session["user_id"]:
+        return redirect("/books")
+
+    if request.method == "POST":
+        title = request.form["title"]
+        author = request.form["author"]
+        year = request.form["year"] or None
+        db.execute(
+            "UPDATE books SET title = ?, author = ?, year = ? WHERE id = ?",
+            [title, author, year, book_id]
+        )
+        db.commit()
+        return redirect(f"/book/{book_id}")
+    
+    return render_template("edit_book.html", book=book)
+
 
 @app.route("/book/<int:book_id>")
 def book(book_id):
@@ -274,3 +308,6 @@ def delete_comment(comment_id):
     db.execute("DELETE FROM comments WHERE id = ?", [comment_id])
     db.commit()
     return redirect(f"/book/{comment['book_id']}")
+
+if __name__ == "__main__":
+    app.run(debug=True)
