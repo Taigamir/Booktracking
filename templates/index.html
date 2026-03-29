@@ -7,9 +7,9 @@
     <p>Find and review books, feel free to add any that are missing.</p>
 
     <h2>Recently Added Books</h2>
-    {% for books in recent_books %}
+    {% for book in recent_books %}
         <div>
-            <a href="/book/{{ book.id}}"></a>
+            <a href="/book/{{ book.id}}">{{ book.title }}</a>
             <span>{{ book.author }}</span>
         </div>
     {% else %}

@@ -7,7 +7,7 @@
     <p>{{ book.author }}{% if book.year %} ({{ book.year}}){% endif %}</p>
 
     {% if session["user_id"] == book["created_by"] %}
-        <a href="/edit_book/{{ bookid }}">Edit book</a>
+        <a href="/edit_book/{{ book.id }}">Edit book</a>
     {% endif %}
 
     {% if avg_rating %}
@@ -18,7 +18,7 @@
 
     {% if session.get("user_id") and not user_review %}
         <h2>Leave a Review</h2>
-        <form method="POST" action="/add_review/ {{ book.id }}">
+        <form method="POST" action="/add_review/{{ book.id }}">
             <label>Rating</label>
             <select name="rating">
                 <option value="5">5 - Excellent</option>
@@ -56,7 +56,7 @@
                         <strong>{{ comment.username }}</strong>
                         <p>{{ comment.content }}</p>
                         {% if session.get("user_id") == comment["user_id"] %}
-                            <a href="/edit_comment({{ comment.id }})">Edit</a>
+                            <a href="/edit_comment/{{ comment.id }}">Edit</a>
                             <a href="/delete_comment/{{ comment.id }}">Delete</a>
                         {% endif %}
                     </div>

@@ -18,14 +18,14 @@
         <div>
             <a href="/book/{{ book.id }}">{{ book.title }}</a>
             <span>{{ book.author }}</span>
-            {% if book.year}<span>{{ book.year }}</span>{% endif %}
+            {% if book.year %}<span>{{ book.year }}</span>{% endif %}
         </div>
     {% else %}
         <p>No books found.
             {% if session["user_id"] %}
-                <a href="add_book?query={{ query }}">Add "{{query}}"?</a>
+                <a href="/add_book?query={{ query }}">Add "{{query}}"?</a>
             {% else %}
-                <a href=""/login">Login to add it</a>
+                <a href="/login">Login to add it</a>
             {% endif %}
         </p>
     {% endfor %}

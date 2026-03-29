@@ -1,13 +1,47 @@
 # Booktracking
 Small test webapp to let users track and review books they have read.\
+This will be somewhat of a community project where the user can add books that are missing and then review and comment on other peoples additions. A Good Reads for the people by the people\
 **Implemented features**\
 -Account creation, login, logout\
+-Searching for books\
+-adding books\
+-Adding and editing Books that dont exist in database yet\
+-making, editing deleting reviews and comments\
 
-**Features will include:**\
--creating and logging into accounts\
--searching for books in database \
--if books dont exist adding them (picture, description, tags)\
--sort seacth funtion by tags\
--making, editing and deleting reviews\
--making, editing and deleting comments on reviews\
--friends list?, messaging and sharing?
+**Features still in development:**\
+-add more details = (picture, description, tags)\
+-sort search funtion by tags\
+-more freedom for reviews/comments = (pictures?)\
+-Profile page? TBR, read, reading shelves?\
+-friends list?, messaging and sharing?\
+
+## Setup
+
+**Requirements**
+- Python 3
+- Flask
+- Werkzeug
+
+**Installation**
+1. Clone the repository
+2. Create a virtual environment and activate it:
+```
+   python -m venv venv
+   venv\Scripts\activate  # Windows
+   source venv/bin/activate  # Mac/Linux
+```
+3. Install flask:
+```
+    pip install flask
+```
+4. Initialize the database:
+```
+    flask init-db
+```
+5. Run the app:
+```
+    flask run
+```
+6. Flask will print you a URL in the terminal, open it in your browser.
+
+**Note:** `database.db` is not included in the repository. The database is created locally when you run `flask init-db`.

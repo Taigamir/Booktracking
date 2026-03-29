@@ -10,7 +10,7 @@
     <nav>
         <a href="/">Home</a>
         <a href="/books">Books</a>
-        {% if session["user_id"] %}
+        {% if session.get("user_id") %}
             <span>Hi, {{session["username"] }}</span>
             <a href="/logout">Logout</a>
         {% else %}

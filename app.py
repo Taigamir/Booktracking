@@ -36,9 +36,9 @@ def index():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form["Username"]
-        password = request.form["Password"]
-        confirm_password = request.form["Confimr_Password"]
+        username = request.form["username"]
+        password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
         if password != confirm_password:
             return render_template("register.html", error="Passwords do not match")
         
@@ -54,7 +54,7 @@ def register():
         return redirect("/login")
     return render_template("register.html")
 
-@app.route("/login", methods=["GET" "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"]
@@ -62,9 +62,11 @@ def login():
         db = get_db()
         user = db.execute("SELECT * FROM users WHERE username = ?",
                           [username]).fetchone()
+        print("USER FOUND:", user)
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
             session["username"] = user["username"]
+            print("SESSION SET:", session)
             return redirect("/")
         return render_template("login.html", error="Wrong username or password")
     return render_template("login.html")
@@ -84,7 +86,7 @@ def books():
             """SELECT * FROM books
                 WHERE LOWER(title) LIKE LOWER(?)
                 OR LOWER(author) LIKE LOWER(?)""",
-            [f"%{query}", f"%{query}"]
+            [f"%{query}%", f"%{query}%"]
         ).fetchall()
     else:
         results = db.execute("SELECT * FROM books").fetchall()
@@ -93,7 +95,7 @@ def books():
 
 @app.route("/add_book", methods=["GET", "POST"])
 def add_book():
-    if not session.get("user.id"):
+    if not session.get("user_id"):
         return redirect("/login")
     
     if request.method == "POST":
@@ -105,12 +107,12 @@ def add_book():
             "INSERT INTO books (title, author, year, created_by) VALUES (?, ?, ?, ?)",
             [title, author, year, session["user_id"]]
         )
-        db = get_db()
+        db.commit()
         book = db.execute(
-            "SELECT *FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
+            "SELECT * FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
             [title, session["user_id"]]
         ).fetchone()
-        return redirect(f"/books/{book['id']}")
+        return redirect(f"/book/{book['id']}")
     
     query = request.args.get("query", "")
     return render_template("add_book.html", query=query)
@@ -155,7 +157,7 @@ def book(book_id):
     reviews = db.execute(
         """SELECT reviews.*, users.username
             FROM reviews
-            JOIN users ON reviews.user_id = user.id
+            JOIN users ON reviews.user_id = users.id
             WHERE reviews.book_id = ?
             ORDER BY reviews.created_at DESC""",
         [book_id]
@@ -167,13 +169,13 @@ def book(book_id):
     ).fetchone()["avg"]
 
     comments = db.execute(
-        """SELECT comments.*m users.username
+        """SELECT comments.*, users.username
             FROM comments
             JOIN users ON comments.user_id = users.id
-            WHERE comments.review_ID IN(
+            WHERE comments.review_id IN(
                 SELECT id FROM reviews WHERE book_id = ?
             )
-            ORDER BY comments.created at ASC""",
+            ORDER BY comments.created_at ASC""",
             [book_id]
     ).fetchall()
 
@@ -186,7 +188,7 @@ def book(book_id):
     
     return render_template("book.html",
                            book=book,
-                           rewiews=reviews,
+                           reviews=reviews,
                            avg_rating=avg_rating,
                             comments=comments,
                             user_review=user_review)
@@ -227,7 +229,7 @@ def edit_review(review_id):
             [rating, content, review_id]
         )
         db.commit()
-        return redirect(f"/book/review['book_id']")
+        return redirect(f"/book/{review['book_id']}")
     return render_template("edit_review.html", review=review)
 
 @app.route("/delete_review/<int:review_id>")
@@ -291,7 +293,7 @@ def edit_comment(comment_id):
         return redirect(f"/book/{comment['book_id']}")
     return render_template("edit_comment.html", comment=comment)
 
-@app.route("/delete_comment/<int:review_id>")
+@app.route("/delete_comment/<int:comment_id>")
 def delete_comment(comment_id):
     if not session.get("user_id"):
         return redirect("/login")

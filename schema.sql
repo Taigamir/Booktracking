@@ -8,8 +8,8 @@ CREATE TABLE books (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     author TEXT NOT NULL,
-    year INTEGER
-    created INTEGER,
+    year INTEGER,
+    created_by INTEGER,
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
@@ -19,7 +19,6 @@ CREATE TABLE genres (
 );
 
 CREATE TABLE book_Genres (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     book_id INTEGER NOT NULL,
     genre_id INTEGER NOT NULL,
     PRIMARY KEY (book_id, genre_id),
@@ -31,11 +30,11 @@ CREATE TABLE reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
-    rating INTEGER NOT NULL CHECK(rating => 1 AND rating <= 5),
+    rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (books_id) REFERENCES books(id)
+    FOREIGN KEY (book_id) REFERENCES books(id)
 );
 
 CREATE TABLE comments (
@@ -49,13 +48,13 @@ CREATE TABLE comments (
 );
 
 INSERT INTO genres (name) VALUES
-    ('Fiction')
-    ('Non-fiction')
-    ('Sci-fi')
-    ('Fantasy')
-    ('Thriller')
-    ('Romance')
-    ('Mystery')
-    ('Horror')
-    ('Historical')
+    ('Fiction'),
+    ('Non-fiction'),
+    ('Sci-fi'),
+    ('Fantasy'),
+    ('Thriller'),
+    ('Romance'),
+    ('Mystery'),
+    ('Horror'),
+    ('Historical'),
     ('Biography');
