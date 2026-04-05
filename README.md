@@ -34,14 +34,20 @@ This will be somewhat of a community project where the user can add books that a
 ```
     pip install flask
 ```
-4. Initialize the database:
+4. Create a `config.py` file based on the example:
+```
+   cp config.py.example config.py
+```
+   Then open `config.py` and change the secret key to any random string.
+
+5. Initialize the database:
 ```
     flask init-db
 ```
-5. Run the app:
+6. Run the app:
 ```
     flask run
 ```
-6. Flask will print you a URL in the terminal, open it in your browser.
+7. Flask will print you a URL in the terminal, open it in your browser.
 
 **Note:** `database.db` is not included in the repository. The database is created locally when you run `flask init-db`.
