@@ -1,7 +1,7 @@
 import sqlite3
+import database as db
 from flask import Flask
 from flask import render_template, request, redirect, g, session
-from database import get_db, close_db, init_db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import config
@@ -9,7 +9,6 @@ import config
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
-app.teardown_appcontext(close_db)
 
 @app.cli.command("init-db")
 def init_db_command():
@@ -18,17 +17,16 @@ def init_db_command():
 
 @app.route("/")
 def index():
-    db = get_db()
-    recent_books = db.execute(
+    recent_books = db.query(
         "SELECT * FROM books ORDER BY id DESC LIMIT 5"
-    ).fetchall()
-    recent_reviews = db.execute(
+    )
+    recent_reviews = db.query(
         """SELECT reviews.*, books.title, users.username
             FROM reviews
             JOIN books ON reviews.book_id = books.id
             JOIN users ON reviews.user_id = users.id
             ORDER BY reviews.created_at DESC LIMIT 5"""
-    ).fetchall()
+    )
     return render_template("index.html",
                            recent_books=recent_books,
                            recent_reviews=recent_reviews)
@@ -43,11 +41,9 @@ def register():
             return render_template("register.html", error="Passwords do not match")
         
         password_hash = generate_password_hash(password)
-        db = get_db()
         try:
             db.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
                     [username, password_hash])
-            db.commit()
         except sqlite3.IntegrityError:
             return render_template("register.html", error="Username already taken")
         
@@ -59,9 +55,9 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE username = ?",
-                          [username]).fetchone()
+        user = db.query_one("SELECT * FROM users WHERE username = ?",
+                          [username])
+        
         print("USER FOUND:", user)
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
@@ -78,18 +74,17 @@ def logout():
 
 @app.route("/books")
 def books():
-    db = get_db()
     query = request.args.get("query", "")
 
     if query:
-        results = db.execute(
+        results = db.query(
             """SELECT * FROM books
                 WHERE LOWER(title) LIKE LOWER(?)
                 OR LOWER(author) LIKE LOWER(?)""",
             [f"%{query}%", f"%{query}%"]
-        ).fetchall()
+        )
     else:
-        results = db.execute("SELECT * FROM books").fetchall()
+        results = db.query("SELECT * FROM books")
 
     return render_template("books.html", books=results, query=query)
 
@@ -102,16 +97,16 @@ def add_book():
         title = request.form["title"]
         author = request.form["author"]
         year = request.form["year"] or None
-        db = get_db()
         db.execute(
             "INSERT INTO books (title, author, year, created_by) VALUES (?, ?, ?, ?)",
             [title, author, year, session["user_id"]]
         )
-        db.commit()
-        book = db.execute(
+        book = db.query_one(
             "SELECT * FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
             [title, session["user_id"]]
-        ).fetchone()
+        )
+        if not book:
+            return redirect("/books")
         return redirect(f"/book/{book['id']}")
     
     query = request.args.get("query", "")
@@ -122,10 +117,9 @@ def edit_book(book_id):
     if not session.get("user_id"):
         return redirect("/login")
     
-    db = get_db()
-    book = db.execute(
+    book = db.query_one(
         "SELECT * FROM books WHERE id = ?", [book_id]
-    ).fetchone()
+    )
 
     if not book or book["created_by"] != session["user_id"]:
         return redirect("/books")
@@ -138,7 +132,6 @@ def edit_book(book_id):
             "UPDATE books SET title = ?, author = ?, year = ? WHERE id = ?",
             [title, author, year, book_id]
         )
-        db.commit()
         return redirect(f"/book/{book_id}")
     
     return render_template("edit_book.html", book=book)
@@ -146,29 +139,27 @@ def edit_book(book_id):
 
 @app.route("/book/<int:book_id>")
 def book(book_id):
-    db = get_db()
-    book = db.execute(
+    book = db.query_one(
         "SELECT * FROM books WHERE id = ?", [book_id]
-    ).fetchone()
-
+    )
     if not book:
         return redirect("/books")
     
-    reviews = db.execute(
+    reviews = db.query(
         """SELECT reviews.*, users.username
             FROM reviews
             JOIN users ON reviews.user_id = users.id
             WHERE reviews.book_id = ?
             ORDER BY reviews.created_at DESC""",
         [book_id]
-    ).fetchall()
+    )
 
-    avg_rating = db.execute(
+    avg_rating = db.query_one(
         "SELECT ROUND(AVG(rating), 1) as avg FROM reviews WHERE book_id = ?",
         [book_id]
-    ).fetchone()["avg"]
+    )
 
-    comments = db.execute(
+    comments = db.query(
         """SELECT comments.*, users.username
             FROM comments
             JOIN users ON comments.user_id = users.id
@@ -177,14 +168,14 @@ def book(book_id):
             )
             ORDER BY comments.created_at ASC""",
             [book_id]
-    ).fetchall()
+    )
 
     user_review = None
     if session.get("user_id"):
-        user_review = db.execute(
+        user_review = db.query_one(
             "SELECT * FROM reviews WHERE user_id = ? AND book_id = ?",
             [session["user_id"], book_id]
-        ).fetchone()
+        )
     
     return render_template("book.html",
                            book=book,
@@ -200,12 +191,10 @@ def add_review(book_id):
     
     rating = request.form["rating"]
     content = request.form["content"]
-    db = get_db()
     db.execute(
         "INSERT INTO reviews (user_id, book_id, rating, content) VALUES (?, ?, ?, ?)",
         [session["user_id"], book_id, rating, content]
     )
-    db.commit()
     return redirect(f"/book/{book_id}")
 
 @app.route("/edit_review/<int:review_id>", methods=["GET", "POST"])
@@ -213,10 +202,9 @@ def edit_review(review_id):
     if not session.get("user_id"):
         return redirect("/login")
 
-    db = get_db()
-    review = db.execute(
+    review = db.query_one(
         "SELECT * FROM reviews WHERE id = ?", [review_id]
-    ).fetchone()
+    )
 
     if not review or review["user_id"] != session["user_id"]:
         return redirect("/books")
@@ -228,7 +216,6 @@ def edit_review(review_id):
             "UPDATE reviews SET rating = ?, content = ? where id = ?",
             [rating, content, review_id]
         )
-        db.commit()
         return redirect(f"/book/{review['book_id']}")
     return render_template("edit_review.html", review=review)
 
@@ -237,16 +224,14 @@ def delete_review(review_id):
     if not session.get("user_id"):
         return redirect("/login")
     
-    db = get_db()
-    review = db.execute(
+    review = db.query_one(
         "SELECT * FROM reviews WHERE id = ?", [review_id]
-    ).fetchone()
+    )
 
     if not review or review["user_id"] != session["user_id"]:
         return redirect("/books")
     
     db.execute("DELETE FROM reviews WHERE id = ?", [review_id])
-    db.commit()
     return redirect(f"/book/{review['book_id']}")
 
 @app.route("/add_comment/<int:review_id>", methods=["POST"])
@@ -255,15 +240,14 @@ def add_comment(review_id):
         return redirect("/login")
 
     content = request.form["content"]
-    db = get_db()
-    review = db.execute(
+    review = db.query_one(
         "SELECT * FROM reviews WHERE id = ?", [review_id]
-    ).fetchone()
+    )
+
     db.execute(
         "INSERT INTO comments (user_id, review_id, content) VALUES (?, ?, ?)",
         [session["user_id"], review_id, content]
     )
-    db.commit()
     return redirect(f"/book/{review['book_id']}")
 
 @app.route("/edit_comment/<int:comment_id>", methods=["GET", "POST"])
@@ -271,15 +255,13 @@ def edit_comment(comment_id):
     if not session.get("user_id"):
         return redirect("/login")
 
-    db = get_db()
-    comment = db.execute(
+    comment = db.query_one(
         """SELECT comments.*, reviews.book_id
             FROM comments
             JOIN reviews ON comments.review_id = reviews.id
             WHERE comments.id = ?""",
             [comment_id]
-    ).fetchone()
-
+    )
     if not comment or comment["user_id"] != session["user_id"]:
         return redirect("/books")
     
@@ -289,7 +271,6 @@ def edit_comment(comment_id):
             "UPDATE comments SET content = ? where id = ?",
             [content, comment_id]
         )
-        db.commit()
         return redirect(f"/book/{comment['book_id']}")
     return render_template("edit_comment.html", comment=comment)
 
@@ -298,17 +279,15 @@ def delete_comment(comment_id):
     if not session.get("user_id"):
         return redirect("/login")
     
-    db = get_db()
-    comment = db.execute(
+    comment = db.query_one(
         "SELECT comments.*, reviews.book_id FROM comments JOIN reviews ON comments.review_id = reviews.id WHERE comments.id = ?",
         [comment_id]
-    ).fetchone()
+    )
 
     if not comment or comment["user_id"] != session["user_id"]:
         return redirect("/books")
     
     db.execute("DELETE FROM comments WHERE id = ?", [comment_id])
-    db.commit()
     return redirect(f"/book/{comment['book_id']}")
 
 if __name__ == "__main__":
