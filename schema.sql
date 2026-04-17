@@ -1,11 +1,12 @@
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE books (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
     author TEXT NOT NULL,
     year INTEGER,
@@ -14,7 +15,7 @@ CREATE TABLE books (
 );
 
 CREATE TABLE genres (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     name TEXT UNIQUE NOT NULL
 );
 
@@ -27,7 +28,7 @@ CREATE TABLE book_Genres (
 );
 
 CREATE TABLE reviews (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
     rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
@@ -38,7 +39,7 @@ CREATE TABLE reviews (
 );
 
 CREATE TABLE comments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     review_id INTEGER NOT NULL,
     content TEXT NOT NULL,

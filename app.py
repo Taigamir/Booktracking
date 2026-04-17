@@ -88,6 +88,44 @@ def books():
 
     return render_template("books.html", books=results, query=query)
 
+@app.route("/user/<int:user_id>")
+def user_profile(user_id):
+    user = db.query_one(
+        """SELECT 
+                id, 
+                username, 
+                DATE(created_as) as join_date
+            FROM users 
+            WHERE id = ?""", 
+        [user_id]
+    )
+    if not user:
+        return "Usernot found", 404 
+    stats = db.query_one(
+        """SELECT
+            COUNT(DISTINCT r.id) as reviews_written,
+            COUNT(DISTINCT c.id) as comments_written,
+            ROUND(AVG(r.rating), 1) as avg_rating
+        FROM users u
+        LEFT JOIN reviews r on r.user_id = u.id
+        LEFT JOIN comments c on c.user_id = u.id
+        WHERE u.id = ? 
+        """, [user_id]
+    )
+    reviews = db.query(
+        """SELECT reviews.*, books.title
+            FROM reviews
+            JOIN books ON reviews.book_id = books.id
+            WHERE reviews.user_id = ?
+            ORDER BY reviews.crated_at DESC
+            LIMIT 5""",
+        [user_id]
+    )
+    return render_template("user.html",
+                           user=user,
+                           stats=stats,
+                           reviews=reviews)
+
 @app.route("/add_book", methods=["GET", "POST"])
 def add_book():
     if not session.get("user_id"):

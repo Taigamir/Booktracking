@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block content %}
+    <h2>{{user.username}}'s Profile</h2>
+    <p>With us since: {{user.join_date}}</p>
+
+    <h3>Stats</h3>
+    <ul>
+        <li>Reviews written: {{stats.reviews_written}}</li>
+        <li>Comments written: {{stats.comments_written}}</li>
+        <li>Average rating given: {{stats.avg_rating}}</li>
+    </ul>
+
+    <h3>Recent reviews by {{user.username}}</h3>
+    {% if reviews %}
+        {% for review in reviews %}
+            <div> class="review">
+                <p><strong><a href="{{url_for('book',book_id=review.book_id)}}">{{ review.title }}</a
+    ></strong>- Rating: {{ review.rating}}/5</p>
+                <p>{{review.content}}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No reviews written yet.</p>
+    {% endif %}
+{% endblock %}

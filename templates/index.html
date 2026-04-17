@@ -20,7 +20,7 @@
     {% for review in recent_reviews %}
         <div>
             <a href="/book/{{ review.book_id}}">{{ review.title}}</a>
-            <span>{{ review.username }} - {{review.rating}}/5</span>
+            <span><a href="/user/{{ review.user_id }}">{{ review.username }}</a> - {{review.rating}}/5</span>
             <p>{{ review.content }}</p>
         </div>
     {% else %}

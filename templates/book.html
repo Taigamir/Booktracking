@@ -40,7 +40,7 @@
     <h2>Reviews</h2>
     {% for review in reviews %}
         <div>
-            <p>{{ review.username }} — {{ review.rating }}/5</p>
+            <p><a href="/user/{{ review.user_id }}">{{ review.username }}</a> — {{ review.rating }}/5</p>
             <p>{{ review.content }}</p>
             <small>{{ review.created_at }}</small>
 
@@ -49,11 +49,11 @@
                 <a href="/delete_review/{{ review.id }}">Delete</a>
             {% endif %}
 
-            <h4>Comments</h4>
+            <h5>Comments</h5>
             {% for comment in comments %}
                 {% if comment.review_id == review.id %}
                     <div>
-                        <strong>{{ comment.username }}</strong>
+                        <strong><a href="/user/{{ comment.user_id }}">{{ comment.username }}</a></strong>
                         <p>{{ comment.content }}</p>
                         {% if session.get("user_id") == comment["user_id"] %}
                             <a href="/edit_comment/{{ comment.id }}">Edit</a>

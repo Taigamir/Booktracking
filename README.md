@@ -7,12 +7,13 @@ This will be somewhat of a community project where the user can add books that a
 -adding books\
 -Adding and editing Books that dont exist in database yet\
 -making, editing deleting reviews and comments\
+-User profile page with user statistics\
 
 **Features still in development:**\
 -add more details = (picture, description, tags)\
 -sort search funtion by tags\
 -more freedom for reviews/comments = (pictures?)\
--Profile page? TBR, read, reading shelves?\
+-TBR, read, reading shelves?\
 -friends list?, messaging and sharing?\
 
 ## Setup
