@@ -10,8 +10,7 @@ This will be somewhat of a community project where the user can add books that a
 -User profile page with user statistics\
 
 **Features still in development:**\
--add more details = (picture, description, tags)\
--sort search funtion by tags\
+-add more details = (picture, description)\
 -more freedom for reviews/comments = (pictures?)\
 -TBR, read, reading shelves?\
 -friends list?, messaging and sharing?\
@@ -52,3 +51,13 @@ This will be somewhat of a community project where the user can add books that a
 7. Flask will print you a URL in the terminal, open it in your browser.
 
 **Note:** `database.db` is not included in the repository. The database is created locally when you run `flask init-db`.
+
+## Testing the Application
+
+1. Register a new account.
+2. Add a few books, selecting one or more genres.
+3. Search books by title, author, or filter by genre.
+4. Visit a book page and leave a review with a rating.
+5. On any review, add a comment.
+6. Go to your user profile by clicking on a review or comment to see your stats and added books.
+7. Edit or delete your own content.

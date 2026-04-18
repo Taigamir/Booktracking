@@ -5,6 +5,7 @@
 {% block content %}
     <h1>Add a Book</h1>
     <form method="POST">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <label>Title</label>
         <input type="text" name="title" value="{{ query }}" required>
 
@@ -13,7 +14,16 @@
 
         <label>Year (optional)</label>
         <input type="number" name="year" min="0" max="2026">
-
+        <fieldset>
+            <legend>Genres (Select one or more)</legend>
+            {% for genre in genres %}
+                <label>
+                    <input type="checkbox" name="genre_ids" value="{{ genre.id }}"
+                        {% if book and genre.id in selected_genre_ids %}checked{% endif %}>
+                    {{ genre.name }}
+                </label>
+            {% endfor %}
+        </fieldset>
         <button type="submit">Add Book</button>
     </form>
 {% endblock %}

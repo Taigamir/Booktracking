@@ -5,6 +5,7 @@
 {% block content %}
     <h1>Edit Review</h1>
     <form method="POST">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <label>Rating</label>
         <select name="rating">
             {% for i in [5, 4, 3, 2, 1] %}

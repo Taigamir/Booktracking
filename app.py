@@ -1,4 +1,7 @@
 import sqlite3
+import secrets
+import click
+from flask.cli import with_appcontext
 import database as db
 from flask import Flask
 from flask import render_template, request, redirect, g, session
@@ -9,11 +12,31 @@ import config
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
+def generate_csrf_token():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(16)
+    return session['_csrf_token']
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
-@app.cli.command("init-db")
+@app.cli.command('init-db')
+@with_appcontext
 def init_db_command():
-    init_db(app)
-    print("Database init")
+    """Clear existing data and create new tables."""
+    con = sqlite3.connect('database.db')
+    with app.open_resource('schema.sql', mode='r') as f:
+        con.executescript(f.read())
+    con.commit()
+    con.close()
+    click.echo('Initialized the database')
+
+@app.before_request
+def csrf_protect():
+    if request.method == "POST":
+        token = session.get('_csrf_token')
+        form_token = request.form.get('_csrf_token')
+        if not token or token != form_token:
+            return "CSRF token missing or incorrect, 400"
+
 
 @app.route("/")
 def index():
@@ -75,18 +98,26 @@ def logout():
 @app.route("/books")
 def books():
     query = request.args.get("query", "")
-
+    genre_id = request.args.get("genre_id", type=int)
+    sql = """SELECT DISTINCT books.* FROM BOOKS
+            LEFT JOIN book_genres ON books.id = book_genres.book_id
+            WHERE 1=1"""
+    params = []
     if query:
-        results = db.query(
-            """SELECT * FROM books
-                WHERE LOWER(title) LIKE LOWER(?)
-                OR LOWER(author) LIKE LOWER(?)""",
-            [f"%{query}%", f"%{query}%"]
-        )
-    else:
-        results = db.query("SELECT * FROM books")
-
-    return render_template("books.html", books=results, query=query)
+        sql += " AND (LOWER(title) LIKE LOWER(?) OR LOWER(author) LIKE LOWER(?))"
+        params.extend([f"%{query}%", f"%{query}%"])
+    if genre_id:
+        sql += " AND book_genres.genre_id =?"
+        params.append(genre_id)
+    sql += " ORDER BY title"
+    results = db.query(sql, params)
+    genres = db.query("SELECT id, name FROM genres ORDER BY name")
+    return render_template(
+        "books.html",
+        books=results, 
+        query=query,
+        genres=genres,
+        selected_genre=genre_id)
 
 @app.route("/user/<int:user_id>")
 def user_profile(user_id):
@@ -94,7 +125,7 @@ def user_profile(user_id):
         """SELECT 
                 id, 
                 username, 
-                DATE(created_as) as join_date
+                DATE(created_at) as join_date
             FROM users 
             WHERE id = ?""", 
         [user_id]
@@ -103,10 +134,12 @@ def user_profile(user_id):
         return "Usernot found", 404 
     stats = db.query_one(
         """SELECT
+            COUNT(DISTINCT b.id) as books_added,
             COUNT(DISTINCT r.id) as reviews_written,
             COUNT(DISTINCT c.id) as comments_written,
             ROUND(AVG(r.rating), 1) as avg_rating
         FROM users u
+        LEFT JOIN books b on b.created_by = u.id
         LEFT JOIN reviews r on r.user_id = u.id
         LEFT JOIN comments c on c.user_id = u.id
         WHERE u.id = ? 
@@ -117,14 +150,23 @@ def user_profile(user_id):
             FROM reviews
             JOIN books ON reviews.book_id = books.id
             WHERE reviews.user_id = ?
-            ORDER BY reviews.crated_at DESC
+            ORDER BY reviews.created_at DESC
             LIMIT 5""",
         [user_id]
     )
+    books_added = db.query(
+        """SELECT id, title, author, year
+            FROM books
+            WHERE created_by ?
+            ORDER BY year DESC""",
+        [user_id]
+    )
     return render_template("user.html",
-                           user=user,
-                           stats=stats,
-                           reviews=reviews)
+            user=user,
+            stats=stats,
+            reviews=reviews,
+            books_added=books_added
+    )
 
 @app.route("/add_book", methods=["GET", "POST"])
 def add_book():
@@ -139,6 +181,13 @@ def add_book():
             "INSERT INTO books (title, author, year, created_by) VALUES (?, ?, ?, ?)",
             [title, author, year, session["user_id"]]
         )
+        book_id = g.last_insert_id
+        selected_genres = request.form.getlist("genre_ids")
+        for genre_id in selected_genres:
+            db.execute(
+                "INSERT INTO book_genres (book_id, genre_id) VALUES (?, ?)",
+                [book_id, genre_id]
+            )
         book = db.query_one(
             "SELECT * FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
             [title, session["user_id"]]
@@ -148,7 +197,8 @@ def add_book():
         return redirect(f"/book/{book['id']}")
     
     query = request.args.get("query", "")
-    return render_template("add_book.html", query=query)
+    genres = db.query("SELECT id, name FROM genres ORDER BY name")
+    return render_template("add_book.html", query=query, genres=genres)
 
 @app.route("/edit_book/<int:book_id>", methods=["GET", "POST"])
 def edit_book(book_id):
@@ -158,10 +208,14 @@ def edit_book(book_id):
     book = db.query_one(
         "SELECT * FROM books WHERE id = ?", [book_id]
     )
-
+    selected_genres = db.query(
+        "SELECT genre_id FROM book_genres WHERE book_id = ?",
+        [book_id]
+    )
+    selected_genre_ids = [row["genre_id"] for row in selected_genres]
     if not book or book["created_by"] != session["user_id"]:
         return redirect("/books")
-
+    
     if request.method == "POST":
         title = request.form["title"]
         author = request.form["author"]
@@ -170,9 +224,19 @@ def edit_book(book_id):
             "UPDATE books SET title = ?, author = ?, year = ? WHERE id = ?",
             [title, author, year, book_id]
         )
+        db.execute(
+            "DELETE FROM book_genres WHERE book_id = ?",
+            [book_id]
+        )
+        selected_genres = request.form.getlist("genre_ids")
+        for genre_id in selected_genres:
+            db.execute("INSERT INTO book_genres (book_id, genre_id) VALUES (?, ?)",
+                    [book_id, genre_id]
+            )
         return redirect(f"/book/{book_id}")
-    
-    return render_template("edit_book.html", book=book)
+    all_genres = db.query("SELECT id, name FROM genres ORDER BY name")
+    return render_template("edit_book.html", book=book, genres=all_genres, 
+        selected_genre_ids=selected_genre_ids)
 
 
 @app.route("/book/<int:book_id>")

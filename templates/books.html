@@ -7,6 +7,14 @@
 
     <form method="GET">
         <input type="text" name="query" value="{{ query}}" placeholder="Search by title or author">
+        <select name="genre_id">
+            <option value="">All Genres</option>
+            {% for genre in genres %}
+                <option value="{{ genre.id }}" {% if selected_genre == genre.id %}selected{% endif %}>
+                    {{ genre.name }}
+                </option>
+            {% endfor %}
+        </select>
         <button type="submit">Search</button>
     </form>
 

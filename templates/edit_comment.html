@@ -5,6 +5,7 @@
 {% block content %}
     <h1>Edit Comment</h1>
     <form method="POST">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <label>Comment</label>
         <textarea name="content" required>{{ comment.content }}</textarea>
 

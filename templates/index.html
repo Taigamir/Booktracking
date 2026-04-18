@@ -9,7 +9,7 @@
     <h2>Recently Added Books</h2>
     {% for book in recent_books %}
         <div>
-            <a href="/book/{{ book.id}}">{{ book.title }}</a>
+            <a href="/book/{{ book.id }}">{{ book.title }}</a>
             <span>{{ book.author }}</span>
         </div>
     {% else %}
@@ -19,7 +19,7 @@
     <h2>Recent Reviews</h2>
     {% for review in recent_reviews %}
         <div>
-            <a href="/book/{{ review.book_id}}">{{ review.title}}</a>
+            <a href="/book/{{ review.book_id }}">{{ review.title}}</a>
             <span><a href="/user/{{ review.user_id }}">{{ review.username }}</a> - {{review.rating}}/5</span>
             <p>{{ review.content }}</p>
         </div>
