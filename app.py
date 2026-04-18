@@ -157,7 +157,7 @@ def user_profile(user_id):
     books_added = db.query(
         """SELECT id, title, author, year
             FROM books
-            WHERE created_by ?
+            WHERE created_by = ?
             ORDER BY year DESC""",
         [user_id]
     )
@@ -260,6 +260,7 @@ def book(book_id):
         "SELECT ROUND(AVG(rating), 1) as avg FROM reviews WHERE book_id = ?",
         [book_id]
     )
+    avg_rating = avg_rating['avg'] if avg_rating else None
 
     comments = db.query(
         """SELECT comments.*, users.username

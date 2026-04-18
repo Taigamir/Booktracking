@@ -13,7 +13,7 @@
     {% if avg_rating %}
         <p>Average rating: {{ avg_rating }}/5 ({{ reviews|length }} reviews)</p>
     {% else %}
-        <p>No rewies yet</p>
+        <p>No reviews yet</p>
     {% endif %}
 
     {% if session.get("user_id") and not user_review %}

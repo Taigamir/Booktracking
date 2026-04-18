@@ -12,6 +12,7 @@
         <a href="/books">Books</a>
         {% if session.get("user_id") %}
             <span>Hi, {{session["username"] }}</span>
+            <a href="/user/{{ session.user_id }}">My Profile</a>
             <a href="/logout">Logout</a>
         {% else %}
             <a href="/login">Login</a>
