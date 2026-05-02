@@ -4,7 +4,6 @@ import sqlite3
 import click
 from flask import Flask, g, redirect, render_template, request, session
 from flask.cli import with_appcontext
-from werkzeug.security import generate_password_hash, check_password_hash
 
 import config
 import database as db
@@ -85,7 +84,7 @@ def logout():
     return redirect("/")
 
 @app.route("/books")
-def list_books():
+def books():
     query = request.args.get("query", "")
     genre_id = request.args.get("genre_id", type=int)
     page = request.args.get("page", 1, type=int)
@@ -104,25 +103,10 @@ def list_books():
         genres=genres,
         selected_genre=genre_id,
         current_page=page,
-        tital_pages=total_pages)
-
-@app.route("/user/<int:user_id>")
-def user_profile(user_id):
-    user = users.get_user(user_id)
-    if not user:
-        return "Usernot found", 404 
-    stats = users.get_user_stats(user_id)
-    recent_reviews = reviews.get_user_reviews(user_id, limit=5)
-    books_added = Books.get_books_added_by(user_id)
-    return render_template("user.html",
-            user=user,
-            stats=stats,
-            reviews=recent_reviews,
-            books_added=books_added
-    )
+        total_pages=total_pages)
 
 @app.route("/add_book", methods=["GET", "POST"])
-def books():
+def add_book():
     if not session.get("user_id"):
         return redirect("/login")
     
@@ -157,7 +141,7 @@ def edit_book(book_id):
     
     selected_genre_ids = Books.get_book_genre_ids(book_id)
     all_genres = Books.get_genres()
-
+    
     return render_template(
             "edit_book.html", 
             book=book, 
@@ -257,9 +241,23 @@ def delete_comment(comment_id):
 
     if not com or com["user_id"] != session["user_id"]:
         return redirect("/books")
-    
-    db.execute("DELETE FROM comments WHERE id = ?", [comment_id])
+    comments.delete_comment(comment_id)
     return redirect(f"/book/{com['book_id']}")
+
+@app.route("/user/<int:user_id>")
+def user_profile(user_id):
+    user = users.get_user(user_id)
+    if not user:
+        return "Usernot found", 404 
+    stats = users.get_user_stats(user_id)
+    recent_reviews = reviews.get_user_reviews(user_id, limit=5)
+    books_added = Books.get_books_added_by(user_id)
+    return render_template("user.html",
+            user=user,
+            stats=stats,
+            reviews=recent_reviews,
+            books_added=books_added
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)

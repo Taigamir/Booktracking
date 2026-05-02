@@ -18,7 +18,7 @@
         <button type="submit">Search</button>
     </form>
 
-    {% if query %}
+    {% if query or selected_genre %}
         <p>{{ books|length }} result(s) found</p>
     {% endif %}
 
@@ -34,10 +34,23 @@
                 {% if query %}
                     <a href="/add_book?query={{ query }}">Add {{query}}?</a>
                 {% else %}
-                <a href="/add_book">Add a new book</a>
+                    <a href="/add_book">Add a new book</a>
+                {% endif %}
             {% else %}
                 <a href="/login">Login to add a book</a>
             {% endif %}
         </p>
     {% endfor %}
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% for p in range(1, total_pages+1) %}
+            {% if p == current_page %}
+                <strong>{{ p }}</strong>
+            {% else %}
+                <a href="?query={{ query }}&genre_id={{ selected_genre or '' }}&page={{ p }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
 {% endblock %}

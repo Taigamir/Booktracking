@@ -15,7 +15,7 @@ def get_all_books(query="", genre_id=None, offset=0, limit=None):
         params.append(genre_id)
     sql += " ORDER BY title"
     if limit is not None:
-        sql += "LIMIT ? OFFSET ?"
+        sql += " LIMIT ? OFFSET ?"
         params.extend([limit, offset])
     return db.query(sql, params)
 

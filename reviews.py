@@ -1,7 +1,5 @@
 import database as db
 
-import database as db
-
 def get_reviews_for_book(book_id):
     return db.query(
         """SELECT reviews.id, reviews.user_id, reviews.book_id,
