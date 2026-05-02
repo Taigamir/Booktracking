@@ -4,6 +4,11 @@
     box-sizing: border-box;
 }
 
+ul, ol {
+    padding-left: 20px;
+    margin: 0 0 1rem 0;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -17,16 +22,27 @@ nav {
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-nav a, nav span {
+.nav-left,
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+nav a {
     color: white;
     text-decoration: none;
-    margin-right: 20px;
+    font-size: 0.95rem;
 }
 
 nav a:hover {
-    text-decoration: underline;
+    color: #3498db;
+    text-decoration: none;
 }
 
 main {

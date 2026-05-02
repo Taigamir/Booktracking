@@ -1,13 +1,13 @@
-import sqlite3
 import secrets
+import sqlite3
+
 import click
+from flask import Flask, g, redirect, render_template, request, session
 from flask.cli import with_appcontext
-import database as db
-from flask import Flask
-from flask import render_template, request, redirect, g, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import config
+import database as db
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -41,10 +41,11 @@ def csrf_protect():
 @app.route("/")
 def index():
     recent_books = db.query(
-        "SELECT * FROM books ORDER BY id DESC LIMIT 5"
+        "SELECT id, title, author, year, created_by FROM books ORDER BY id DESC LIMIT 5"
     )
     recent_reviews = db.query(
-        """SELECT reviews.*, books.title, users.username
+        """SELECT reviews.id, reviews.user_id, reviews.book_id, reviews.rating, 
+            reviews.content, reviews.created_at, books.title, users.username
             FROM reviews
             JOIN books ON reviews.book_id = books.id
             JOIN users ON reviews.user_id = users.id
@@ -99,7 +100,7 @@ def logout():
 def books():
     query = request.args.get("query", "")
     genre_id = request.args.get("genre_id", type=int)
-    sql = """SELECT DISTINCT books.* FROM BOOKS
+    sql = """SELECT DISTINCT books.id, bookd.title, books.author, books.year, books.created-by FROM books
             LEFT JOIN book_genres ON books.id = book_genres.book_id
             WHERE 1=1"""
     params = []
@@ -146,7 +147,7 @@ def user_profile(user_id):
         """, [user_id]
     )
     reviews = db.query(
-        """SELECT reviews.*, books.title
+        """SELECT reviews.id, reviews.user_id, reviews.book_id, reviewsrating, reviews.content, reviews.created_at, books.title
             FROM reviews
             JOIN books ON reviews.book_id = books.id
             WHERE reviews.user_id = ?
@@ -189,7 +190,7 @@ def add_book():
                 [book_id, genre_id]
             )
         book = db.query_one(
-            "SELECT * FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
+            "SELECT id, title, author, year, created_by FROM books WHERE title = ? AND created_by = ? ORDER BY id DESC LIMIT 1",
             [title, session["user_id"]]
         )
         if not book:
@@ -206,7 +207,7 @@ def edit_book(book_id):
         return redirect("/login")
     
     book = db.query_one(
-        "SELECT * FROM books WHERE id = ?", [book_id]
+        "SELECT id, title, author, year, created_by FROM books WHERE id = ?", [book_id]
     )
     selected_genres = db.query(
         "SELECT genre_id FROM book_genres WHERE book_id = ?",
@@ -242,13 +243,13 @@ def edit_book(book_id):
 @app.route("/book/<int:book_id>")
 def book(book_id):
     book = db.query_one(
-        "SELECT * FROM books WHERE id = ?", [book_id]
+        "SELECT id, title, author, year, created_by FROM books WHERE id = ?", [book_id]
     )
     if not book:
         return redirect("/books")
     
     reviews = db.query(
-        """SELECT reviews.*, users.username
+        """SELECT reviews.id, reviews.user_id, reviews.book_id, reviewsrating, reviews.content, reviews.created_at, users.username
             FROM reviews
             JOIN users ON reviews.user_id = users.id
             WHERE reviews.book_id = ?
@@ -281,9 +282,9 @@ def book(book_id):
         )
     
     return render_template("book.html",
-                           book=book,
-                           reviews=reviews,
-                           avg_rating=avg_rating,
+                            book=book,
+                            reviews=reviews,
+                            avg_rating=avg_rating,
                             comments=comments,
                             user_review=user_review)
 
@@ -306,7 +307,7 @@ def edit_review(review_id):
         return redirect("/login")
 
     review = db.query_one(
-        "SELECT * FROM reviews WHERE id = ?", [review_id]
+        "SELECT id, user_id, book_id, rating, content, created_at FROM reviews WHERE id = ?", [review_id]
     )
 
     if not review or review["user_id"] != session["user_id"]:
@@ -344,7 +345,7 @@ def add_comment(review_id):
 
     content = request.form["content"]
     review = db.query_one(
-        "SELECT * FROM reviews WHERE id = ?", [review_id]
+        "SELECT id, book_id FROM reviews WHERE id = ?", [review_id]
     )
 
     db.execute(
@@ -359,7 +360,7 @@ def edit_comment(comment_id):
         return redirect("/login")
 
     comment = db.query_one(
-        """SELECT comments.*, reviews.book_id
+        """SELECT comments.id, comments.user_id, comments.review.id, comments.content, comments.created_at, reviews.book_id
             FROM comments
             JOIN reviews ON comments.review_id = reviews.id
             WHERE comments.id = ?""",
@@ -383,7 +384,7 @@ def delete_comment(comment_id):
         return redirect("/login")
     
     comment = db.query_one(
-        "SELECT comments.*, reviews.book_id FROM comments JOIN reviews ON comments.review_id = reviews.id WHERE comments.id = ?",
+        "SELECT comments.id, comments.user_id, comments.review.id, comments.content, comments.created_at, reviews.book_id FROM comments JOIN reviews ON comments.review_id = reviews.id WHERE comments.id = ?",
         [comment_id]
     )
 
