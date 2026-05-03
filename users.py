@@ -1,6 +1,6 @@
+"""Data access module for user accounts"""
 from werkzeug.security import generate_password_hash, check_password_hash
 import database as db
-"""Handles all data related to users"""
 def create_user(username, password):
     """Adds new user to db"""
     password_hash = generate_password_hash(password)

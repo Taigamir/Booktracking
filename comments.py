@@ -1,5 +1,5 @@
+"""Data access module for comments"""
 import database as db
-"""Module handles all data related to comments"""
 def get_comments_for_book(book_id):
     """Gets all comments under a book"""
     return db.query(

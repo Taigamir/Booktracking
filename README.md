@@ -3,7 +3,7 @@ Small test webapp to let users track and review books they have read.\
 This will be somewhat of a community project where the user can add books that are missing and then review and comment on other peoples additions. A Good Reads for the people by the people\
 **Implemented features**\
 -Account creation, login, logout\
--Searching for books\
+-Searching for books by title, author and genre\
 -adding books\
 -Adding and editing Books that dont exist in database yet\
 -making, editing deleting reviews and comments\
@@ -65,3 +65,7 @@ Run it and then test the app as usual
 
 After inserting a large amount of data the app remains perfectly responsive:
 All pages including the search function load near instantly there is not much to say besides that
+
+## Code quality
+
+The code fulfills all pylint criteria receiving a 10/10 and is clean enough.

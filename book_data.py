@@ -1,5 +1,5 @@
-import database as db
 """Data access module for books and genres."""
+import database as db
 def get_all_books(query="", genre_id=None, offset=0, limit=None):
     """Finds all books"""
     sql = """SELECT DISTINCT books.id, books.title, books.author,

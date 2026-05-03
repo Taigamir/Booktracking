@@ -1,6 +1,6 @@
+"""SQlite wrapper for flask app"""
 import sqlite3
 from flask import g
-"""Module handles all interaction with main database"""
 def get_db():
     """finds database"""
     return sqlite3.connect("database.db")

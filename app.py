@@ -1,3 +1,5 @@
+"""BookReviews application main module."""
+
 import secrets
 import sqlite3
 
@@ -11,7 +13,6 @@ import reviews
 import comments
 import users
 
-"""BookReviews application main module."""
 
 app = Flask(__name__)
 app.secret_key = config.secret_key

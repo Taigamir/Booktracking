@@ -1,5 +1,5 @@
+"""Data access module for reviews"""
 import database as db
-"""Module for handling all data related to reviews"""
 def get_reviews_for_book(book_id):
     """Gets all reviews for specific book"""
     return db.query(
