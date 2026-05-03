@@ -18,7 +18,7 @@
     {% if books_added %}
         <ul>
         {% for book in books_added %}
-            <li><a href="{{ url_for('book', book_id=book.id) }}">{{ book.title }}</a> by {{ book.author
+            <li><a href="/book/{{ book.id }}">{{ book.title }}</a> by {{ book.author
             }} ({{ book.year }})</li>
         {% endfor %} 
         </ul>
@@ -30,7 +30,7 @@
     {% if reviews %}
         {% for review in reviews %}
             <div class="review">
-                <p><strong><a href="{{ url_for('book',book_id=review.book_id )}}">{{ review.title }}</a
+                <p><strong><a href="/book/{{ review.book_id }}">{{ review.title }}</a
     ></strong>- Rating: {{ review.rating}}/5</p>
                 <p>{{review.content}}</p>
             </div>

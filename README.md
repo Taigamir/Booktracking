@@ -9,12 +9,6 @@ This will be somewhat of a community project where the user can add books that a
 -making, editing deleting reviews and comments\
 -User profile page with user statistics\
 
-**Features still in development:**\
--add more details = (picture, description)\
--more freedom for reviews/comments = (pictures?)\
--TBR, read, reading shelves?\
--friends list?, messaging and sharing?\
-
 ## Setup
 
 **Requirements**
@@ -61,3 +55,13 @@ This will be somewhat of a community project where the user can add books that a
 5. On any review, add a comment.
 6. Go to your user profile by clicking on a review or comment to see your stats and added books.
 7. Edit or delete your own content.
+
+## Testing with large data
+
+A `seed.py` script is provided to insert 10 000 users, 50 000 books, and numerous reviews and comments.
+Run it and then test the app as usual
+
+## Personal Large-data tests
+
+After inserting a large amount of data the app remains perfectly responsive:
+All pages including the search function load near instantly there is not much to say besides that

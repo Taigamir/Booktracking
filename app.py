@@ -2,12 +2,12 @@ import secrets
 import sqlite3
 
 import click
-from flask import Flask, g, redirect, render_template, request, session
+from flask import Flask, abort, redirect, render_template, request, session
 from flask.cli import with_appcontext
 
 import config
 import database as db
-import Books
+import book_data as Books
 import reviews
 import comments
 import users
@@ -95,6 +95,7 @@ def books():
     results = Books.get_all_books(query, genre_id, offset, per_page)
     genres = Books.get_genres()
     total_pages = max(1, (total + per_page - 1) // per_page)
+    page_numbers = get_page_numbers(page, total_pages)
 
     return render_template(
         "books.html",
@@ -103,7 +104,8 @@ def books():
         genres=genres,
         selected_genre=genre_id,
         current_page=page,
-        total_pages=total_pages)
+        total_pages=total_pages,
+        page_numbers=page_numbers)
 
 @app.route("/add_book", methods=["GET", "POST"])
 def add_book():
@@ -258,6 +260,22 @@ def user_profile(user_id):
             reviews=recent_reviews,
             books_added=books_added
     )
+
+def get_page_numbers(current, total, window=2):
+    if total <= 10:
+        return list(range(1, total + 1))
+
+    pages = []
+    pages.extend(range(1, 3))
+    if current > 4:
+        pages.append(None)
+    start = max(current - window, 3)
+    end = min(current + window, total - 2)
+    pages.extend(range(start, end + 1))
+    if current < total - 3:
+        pages.append(None)
+    pages.extend(range(total - 1, total + 1))
+    return pages
 
 if __name__ == "__main__":
     app.run(debug=True)

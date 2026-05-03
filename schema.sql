@@ -59,3 +59,10 @@ INSERT INTO genres (name) VALUES
     ('Horror'),
     ('Historical'),
     ('Biography');
+
+
+CREATE INDEX idx_books_title ON books(title);
+CREATE INDEX idx_books_author ON books(author);
+CREATE INDEX idx_book_genres_book ON book_genres(book_id);
+CREATE INDEX idx_book_genres_genre ON book_genres(genre_id);
+CREATE INDEX idx_reviews_book_id ON reviews(book_id);

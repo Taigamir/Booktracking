@@ -44,8 +44,10 @@
 
     {% if total_pages > 1 %}
     <div class="pagination">
-        {% for p in range(1, total_pages+1) %}
-            {% if p == current_page %}
+        {% for p in page_numbers %}
+            {% if p is none %}
+                <span>...</span>
+            {% elif p == current_page %}
                 <strong>{{ p }}</strong>
             {% else %}
                 <a href="?query={{ query }}&genre_id={{ selected_genre or '' }}&page={{ p }}">{{ p }}</a>
