@@ -1,6 +1,7 @@
 import database as db
-
+"""Module for handling all data related to reviews"""
 def get_reviews_for_book(book_id):
+    """Gets all reviews for specific book"""
     return db.query(
         """SELECT reviews.id, reviews.user_id, reviews.book_id,
                   reviews.rating, reviews.content, reviews.created_at,
@@ -13,33 +14,40 @@ def get_reviews_for_book(book_id):
     )
 
 def get_user_review(user_id, book_id):
+    """Gets all reviews by user"""
     return db.query_one(
-        "SELECT id, user_id, book_id, rating, content, created_at FROM reviews WHERE user_id = ? AND book_id = ?",
+        "SELECT id, user_id, book_id, rating, content, created_at "
+        "FROM reviews WHERE user_id = ? AND book_id = ?",
         [user_id, book_id]
     )
 
 def add_review(user_id, book_id, rating, content):
+    """Adds review to book"""
     db.execute(
         "INSERT INTO reviews (user_id, book_id, rating, content) VALUES (?, ?, ?, ?)",
         [user_id, book_id, rating, content]
     )
 
 def get_review(review_id):
+    """Gets a spcific review"""
     return db.query_one(
         "SELECT id, user_id, book_id, rating, content, created_at FROM reviews WHERE id = ?",
         [review_id]
     )
 
 def update_review(review_id, rating, content):
+    """Updates review"""
     db.execute(
         "UPDATE reviews SET rating = ?, content = ? WHERE id = ?",
         [rating, content, review_id]
     )
 
 def delete_review(review_id):
+    """Deletes review"""
     db.execute("DELETE FROM reviews WHERE id = ?", [review_id])
 
 def get_avg_rating(book_id):
+    """Returns books avg rating"""
     result = db.query_one(
         "SELECT ROUND(AVG(rating), 1) AS avg FROM reviews WHERE book_id = ?",
         [book_id]
@@ -47,6 +55,7 @@ def get_avg_rating(book_id):
     return result["avg"] if result else None
 
 def get_recent_reviews(limit=5):
+    """Returns most recent reviews"""
     return db.query(
         """SELECT reviews.id, reviews.user_id, reviews.book_id,
                   reviews.rating, reviews.content, reviews.created_at,
@@ -59,6 +68,7 @@ def get_recent_reviews(limit=5):
     )
 
 def get_user_reviews(user_id, limit=5):
+    """Returns most recent reviews by user"""
     return db.query(
         """SELECT reviews.id, reviews.user_id, reviews.book_id,
                   reviews.rating, reviews.content, reviews.created_at,

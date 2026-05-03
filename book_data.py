@@ -1,6 +1,7 @@
 import database as db
-
+"""Data access module for books and genres."""
 def get_all_books(query="", genre_id=None, offset=0, limit=None):
+    """Finds all books"""
     sql = """SELECT DISTINCT books.id, books.title, books.author,
             books.year, books.created_by
             FROM books
@@ -20,6 +21,7 @@ def get_all_books(query="", genre_id=None, offset=0, limit=None):
     return db.query(sql, params)
 
 def count_books(query="", genre_id=None):
+    """Count amount of books"""
     sql = """SELECT COUNT(DISTINCT books.id) AS cnt
              FROM books
              LEFT JOIN book_genres ON books.id = book_genres.book_id
@@ -34,12 +36,14 @@ def count_books(query="", genre_id=None):
     return db.query_one(sql, params)["cnt"]
 
 def get_book(book_id):
+    """Returns specific book"""
     return db.query_one(
         "SELECT id, title, author, year, created_by FROM books WHERE id = ?",
         [book_id]
     )
 
 def add_book(title, author, year, user_id, genre_ids):
+    """Adds book to database"""
     db.execute(
         "INSERT INTO books (title, author, year, created_by) VALUES (?, ?, ?, ?)",
         [title, author, year, user_id]
@@ -53,6 +57,7 @@ def add_book(title, author, year, user_id, genre_ids):
     return book_id
 
 def update_book(book_id, title, author, year, genre_ids):
+    """Updates a books info"""
     db.execute(
         "UPDATE books SET title = ?, author = ?, year = ? WHERE id = ?",
         [title, author, year, book_id]
@@ -68,6 +73,7 @@ def update_book(book_id, title, author, year, genre_ids):
         )
 
 def get_book_genre_ids(book_id):
+    """Returns a books genres"""
     rows = db.query(
         "SELECT genre_id FROM book_genres WHERE book_id = ?",
         [book_id]
@@ -75,16 +81,19 @@ def get_book_genre_ids(book_id):
     return [r["genre_id"] for r in rows]
 
 def get_recent_books(limit=5):
+    """Retruns most recently added books"""
     return db.query(
         "SELECT id, title, author, year, created_by FROM books ORDER BY id DESC LIMIT ?",
         [limit]
     )
 
 def get_books_added_by(user_id):
+    """Gets all books added by a specific user"""
     return db.query(
         "SELECT id, title, author, year FROM books WHERE created_by = ? ORDER BY year DESC",
         [user_id]
     )
 
 def get_genres():
+    """Returns all genres"""
     return db.query("SELECT id, name FROM genres ORDER BY name")

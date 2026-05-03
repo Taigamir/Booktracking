@@ -1,8 +1,8 @@
-import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import database as db
-
+"""Handles all data related to users"""
 def create_user(username, password):
+    """Adds new user to db"""
     password_hash = generate_password_hash(password)
     db.execute(
         "INSERT INTO users (username, password_hash) VALUES (?, ?)",
@@ -10,6 +10,7 @@ def create_user(username, password):
     )
 
 def check_login(username, password):
+    """Checks if user logged in"""
     user = db.query_one(
         "SELECT id, username, password_hash FROM users WHERE username = ?",
         [username]
@@ -19,12 +20,14 @@ def check_login(username, password):
     return None
 
 def get_user(user_id):
+    """Gets base user data"""
     return db.query_one(
         "SELECT id, username, DATE(created_at) AS join_date FROM users WHERE id = ?",
         [user_id]
     )
 
 def get_user_stats(user_id):
+    """Returns specific user statistics"""
     return db.query_one(
         """SELECT
             COUNT(DISTINCT b.id)        AS books_added,
