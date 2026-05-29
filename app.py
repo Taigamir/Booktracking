@@ -133,7 +133,7 @@ def add_book():
         title = request.form.get("title", "").strip()
         author = request.form.get("author", "").strip()
         if not title or not author:
-            return render_template("add_book.html", error="Title and author are required")
+            return render_template("add_book.html", error="Title and author are required", query=title, genres=Books.get_genres())
         year = request.form["year"] or None
         if year:
             try:
@@ -141,14 +141,14 @@ def add_book():
                 if year < 0 or year > 2026:
                     raise ValueError
             except:
-                return render_template("add_book.html", error="Invalid year")
+                return render_template("add_book.html", error="Invalid year", query=title, genres=Books.get_genres())
         genre_ids = request.form.getlist("genre_ids")
         if not genre_ids:
-            return render_template("add_book.html", error="Select at least one genre")
+            return render_template("add_book.html", error="Select at least one genre", query=title, genres=Books.get_genres())
         existing_genres = {g["id"] for g in Books.get_genres()}
         for gid in genre_ids:
             if int(gid) not in existing_genres:
-                return render_template("add_book.html", error="Invalid genre selected")
+                return render_template("add_book.html", error="Invalid genre selected", query=title, genres=Books.get_genres())
         new_book_id = Books.add_book(title, author, year, session["user_id"], genre_ids)
         return redirect(f"/book/{new_book_id}")
 
@@ -185,7 +185,7 @@ def edit_book(book_id):
         existing_genres = {g["id"] for g in Books.get_genres()}
         for gid in genre_ids:
             if int(gid) not in existing_genres:
-                return render_template("add_book.html", error="Invalid genre selected")
+                return render_template("edit_book.html", error="Invalid genre selected")
         Books.update_book(book_id, title, author, year, genre_ids)
         return redirect(f"/book/{book_id}")
 
