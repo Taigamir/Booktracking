@@ -62,6 +62,12 @@ def register():
         username = request.form["username"]
         password = request.form["password"]
         confirm_password = request.form["confirm_password"]
+        if not username or not password:
+            return render_template("register.html", error="Username and password are required.")
+        if len(username) < 3 or len(username) > 20:
+            return render_template("register.html", error="Username must be 3-20 characters")
+        if len(password) < 6:
+            return render_template("register.html", error="Password must be at least 6 characters")
         if password != confirm_password:
             return render_template("register.html", error="Passwords do not match")
         try:
@@ -124,10 +130,25 @@ def add_book():
         return redirect("/login")
 
     if request.method == "POST":
-        title = request.form["title"]
-        author = request.form["author"]
+        title = request.form.get("title", "").strip()
+        author = request.form.get("author", "").strip()
+        if not title or not author:
+            return render_template("add_book.html", error="Title and author are required")
         year = request.form["year"] or None
+        if year:
+            try:
+                year = int(year)
+                if year < 0 or year > 2026:
+                    raise ValueError
+            except:
+                return render_template("add_book.html", error="Invalid year")
         genre_ids = request.form.getlist("genre_ids")
+        if not genre_ids:
+            return render_template("add_book.html", error="Select at least one genre")
+        existing_genres = {g["id"] for g in Books.get_genres()}
+        for gid in genre_ids:
+            if int(gid) not in existing_genres:
+                return render_template("add_book.html", error="Invalid genre selected")
         new_book_id = Books.add_book(title, author, year, session["user_id"], genre_ids)
         return redirect(f"/book/{new_book_id}")
 
@@ -146,10 +167,25 @@ def edit_book(book_id):
         return redirect("/books")
 
     if request.method == "POST":
-        title = request.form["title"]
-        author = request.form["author"]
+        title = request.form.get("title", "").strip()
+        author = request.form.get("author", "").strip()
+        if not title or not author:
+            return render_template("edit_book.html", error="Title and author required")
         year = request.form["year"] or None
+        if year:
+            try:
+                year = int(year)
+                if year < 0 or year > 2026:
+                    raise ValueError
+            except:
+                return render_template("edit_book.html", error="Invalid year")
         genre_ids = request.form.getlist("genre_ids")
+        if not genre_ids:
+            return render_template("edit_book.html", error="Select at least one genre")
+        existing_genres = {g["id"] for g in Books.get_genres()}
+        for gid in genre_ids:
+            if int(gid) not in existing_genres:
+                return render_template("add_book.html", error="Invalid genre selected")
         Books.update_book(book_id, title, author, year, genre_ids)
         return redirect(f"/book/{book_id}")
 
@@ -189,9 +225,15 @@ def add_review(book_id):
     """Render review creation page"""
     if not session.get("user_id"):
         return redirect("/login")
-
-    rating = request.form["rating"]
-    content = request.form["content"]
+    try:
+        rating = int(request.form["rating"])
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except:
+        return redirect(f"/book/{book_id}?error=Rating must be 1-5")
+    content = request.form.get("content", "").strip()
+    if not content:
+        return redirect(f"/book/{book_id}?error=Review cannot be empty")
     reviews.add_review(session["user_id"], book_id, rating, content)
     return redirect(f"/book/{book_id}")
 
@@ -206,8 +248,15 @@ def edit_review(review_id):
         return redirect("/books")
 
     if request.method == "POST":
-        rating = request.form["rating"]
-        content = request.form["content"]
+        try:
+            rating = int(request.form["rating"])
+            if rating < 1 or rating > 5:
+                raise ValueError
+        except:
+            return render_template("edit_review.html", error="Rating must be 1-5", review=review)
+        content = request.form.get("content", "").strip()
+        if not content:
+            return render_template("edit_review.html", error="Review cannot be empty", review=review)
         reviews.update_review(review_id, rating, content)
         return redirect(f"/book/{review['book_id']}")
     return render_template("edit_review.html", review=review)
@@ -229,10 +278,11 @@ def add_comment(review_id):
     """Render comment creation page"""
     if not session.get("user_id"):
         return redirect("/login")
-
-    content = request.form["content"]
-    comments.add_comment(session["user_id"], review_id, content)
+    content = request.form["content"].strip()
     review = reviews.get_review(review_id)
+    if not content:
+        return redirect(f"/book/{review['book_id']}?error=Comment cannot be empty")
+    comments.add_comment(session["user_id"], review_id, content)
     return redirect(f"/book/{review['book_id']}")
 
 @app.route("/edit_comment/<int:comment_id>", methods=["GET", "POST"])
@@ -246,7 +296,9 @@ def edit_comment(comment_id):
         return redirect("/books")
 
     if request.method == "POST":
-        content = request.form["content"]
+        content = request.form.get("content", "").strip()
+        if not content:
+            return render_template("edit_comment.html", error="Comment cannot be empty", comment=com)
         comments.update_comment(comment_id, content)
         return redirect(f"/book/{com['book_id']}")
     return render_template("edit_comment.html", comment=com)
